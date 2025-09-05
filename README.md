@@ -6,5 +6,5 @@ Useful Tampermonkey user scripts
 Take back clipboard control for sites that try to disable it
 
 ## Site Specific
-### Cathay Pacific Scroll Fixer ([Install](https://github.com/mannylee/user-scripts/raw/main/user-scripts/cathay-pacific-scroll-fixer.user.js))
-Fix scrolling on the Cathay Pacific website
+### Amazon URL Cleanser ([Install](https://github.com/mannylee/user-scripts/raw/main/user-scripts/amazon-url-cleanser.user.js))
+Cleans Amazon marketplace URLs to remove tracking
