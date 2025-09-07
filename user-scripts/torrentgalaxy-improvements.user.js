@@ -1,15 +1,15 @@
 // ==UserScript==
 // @name         TorrentGalaxy Improvements
 // @namespace    https://github.com/mannylee
-// @version      2024.06.11
+// @version      2025-09-07
 // @description  Improvements to the TorrentGalaxy site
 // @author       mannylee
 // @match        https://torrentgalaxy.to/*
-// @icon         https://torrentgalaxy.to/common/favicon/ms-icon-144x144.png
+// @match        https://torrentgalaxy.one/*
+// @icon         https://torrentgalaxy.one/static/tgx/images/favicon.ico
 // @grant        none
 // @run-at       document-idle
 // ==/UserScript==
-
 
 let TGImprovements = {
     CONFIG: {
@@ -19,9 +19,11 @@ let TGImprovements = {
         retryInterval: 800,
         log: []
     },
+
     initialise: ()=>{
         console.info(GM_info.script.name + " " + GM_info.script.version);
         TGImprovements.fixTableLinks();
+        TGImprovements.updateKeywordDisplay();
     },
 
     fixTableLinks: ()=>{
@@ -40,6 +42,21 @@ let TGImprovements = {
             }
         }, TGImprovements.CONFIG.retryInterval);
     },
+
+    updateKeywordDisplay: ()=>{
+        const match = window.location.pathname.match(/keywords:([^/]+)\/?/);
+        if (match && match[1]) {
+            const decodedKeyword = decodeURIComponent(match[1]);
+            const keywordDiv = document.querySelector("#keywords");
+            if (keywordDiv) {
+                keywordDiv.value = decodedKeyword;
+                TGImprovements.log(`Updated #keywords div to: "${decodedKeyword}"`);
+            } else {
+                TGImprovements.log("No #keywords div found to update.");
+            }
+        }
+    },
+
     log: (value)=>{
         TGImprovements.CONFIG.log.push(value);
     }
