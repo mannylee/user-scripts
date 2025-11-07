@@ -1,7 +1,7 @@
 // ==UserScript==
 // @name         Malaysia Digital Arrival Card (MDAC) Enhancements
 // @namespace    https://github.com/mannylee
-// @version      2025-11-01
+// @version      2025-11-08
 // @description  Autopopulate fields in the MDAC & fix field manipulation
 // @author       mannylee
 // @match        https://imigresen-online.imi.gov.my/mdac/main?registerMain
@@ -11,20 +11,12 @@
 // @run-at       document-end
 // ==/UserScript==
 
-const getTomorrowDate = (offset) => {
-    const today = new Date();
-    today.setDate(today.getDate() + 1 + (offset || 0));
-    return `${String(today.getDate()).padStart(2,'0')}/${String(today.getMonth()+1).padStart(2,'0')}/${today.getFullYear()}`;
-};
-
 const MDACEnhancements = {
     CONFIG: {
         PEOPLE: null,
         PERSON: {},
         ADDRESS: {},
         TRAVELINFO: {
-            arrDt: getTomorrowDate(),
-            depDt: getTomorrowDate(),
             vesselNm: "BUS",
             trvlMode: "2",
             embark: "SGP",
@@ -54,13 +46,13 @@ const MDACEnhancements = {
                 accommodationPostcode: "10200",
                 accommodationCity: "0708",
                 trvlMode: "1",
-                vesselNm: "",
-                depDt: getTomorrowDate(1)
+                vesselNm: ""
             }
         },
         FIELDS_NEED_REFRESH: { accommodationState: "accommodationCity" },
         FIELDS_ALLOW_COPY_PASTE: ["email","confirmEmail","mobile","accommodationAddress1","accommodationAddress2"],
-        FIELDS_ALLOW_EDIT: ["dob","passExpDte","arrDt","depDt"]
+        FIELDS_ALLOW_EDIT: ["dob","passExpDte","arrDt","depDt"],
+        FIELDS_DISABLE_AUTOCOMPLETE: ["passNo","email","confirmEmail","mobile","dob","passExpDte","arrDt","depDt"]
     },
 
     load() {
@@ -72,21 +64,29 @@ const MDACEnhancements = {
     },
 
     promptForChoice(promptMsg, keys) {
-        let choiceIndex = parseInt(prompt(`${promptMsg}: ${keys.map((k,i) => `${i+1} = ${k}`).join(", ")}`),10) - 1;
-        if (choiceIndex < 0 || choiceIndex >= keys.length) {
-            alert("Invalid choice, defaulting to first option.");
-            choiceIndex = 0;
+        const choiceIndex = parseInt(
+            prompt(`${promptMsg}: ${keys.map((k,i) => `${i+1} = ${k}`).join(", ")}`),
+            10
+        ) - 1;
+
+        // Return null if invalid
+        if (choiceIndex < 0 || choiceIndex >= keys.length || isNaN(choiceIndex)) {
+            return null;
         }
+
         return keys[choiceIndex];
     },
 
     promptForOptions() {
         const personKey = this.promptForChoice("Choose person", Object.keys(this.CONFIG.PEOPLE));
-        this.CONFIG.PERSON = this.CONFIG.PEOPLE[personKey];
+        this.CONFIG.PERSON = personKey ? this.CONFIG.PEOPLE[personKey] : null;
 
         const addressKey = this.promptForChoice("Choose address", Object.keys(this.CONFIG.ADDRESSES));
-        this.CONFIG.ADDRESS = {...this.CONFIG.TRAVELINFO, ...this.CONFIG.ADDRESSES[addressKey]};
+        this.CONFIG.ADDRESS = addressKey
+            ? { ...this.CONFIG.TRAVELINFO, ...this.CONFIG.ADDRESSES[addressKey] }
+        : null;
     },
+
 
     autofill() {
         // Fill personal details
@@ -140,13 +140,37 @@ const MDACEnhancements = {
     },
 
     fieldsEnhancements() {
+        // force fields to allow pasting
         this.CONFIG.FIELDS_ALLOW_COPY_PASTE.forEach(id=>{
             const elem = document.getElementById(id);
-            if(elem) elem.oncopy = elem.onpaste = ()=>true;
+            if(elem) elem.oncopy = elem.onpaste = "return true;";
         });
+
+        // Force fields to be editable
         this.CONFIG.FIELDS_ALLOW_EDIT.forEach(id=>{
             document.getElementById(id)?.removeAttribute("readonly");
         });
+
+        // Force fields to be editable
+        this.CONFIG.FIELDS_DISABLE_AUTOCOMPLETE.forEach(id=>{
+            const el = document.getElementById(id);
+            el?.setAttribute('autocomplete', 'off');       // main
+            el?.setAttribute('autocorrect', 'off');        // optional
+            el?.setAttribute('autocapitalize', 'off');     // optional
+            el?.setAttribute('spellcheck', 'false');       // optional
+        });
+
+        // disable date picker for dob and passport expiry
+        $('#dob').off();
+        $('#passExpDte').off();
+
+        // Set default arrival and departure dates to tomorrow
+        var tomorrow = new Date();
+        tomorrow.setDate(tomorrow.getDate() + 1);
+        $('#arrDt').datepicker('setDate', tomorrow);
+        $('#depDt').datepicker('setDate', tomorrow);
+
+        //
     },
 
     log(value) { console.info(`${GM_info.script.name}: ${value}`); }
