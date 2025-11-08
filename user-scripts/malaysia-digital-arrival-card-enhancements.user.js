@@ -170,16 +170,20 @@ const MDACEnhancements = {
                 $('#arrDt').datepicker('setDate', tomorrow);
                 $('#depDt').datepicker('setDate', tomorrow);
 
-
+                // Allow user to select new person
                 $('a:contains("Personal Information")')
                     .removeAttr('data-parent')
                     .removeAttr('href')
                     .click(MDACEnhancements.promptPerson);
 
+                // Allow user to select new address
                 $('a:contains("Traveling Information")')
                     .removeAttr('data-parent')
                     .removeAttr('href')
                     .click(MDACEnhancements.promptAddress);
+
+                // Remove the reset button
+                $("#reset").remove();
 
                 return true; // Return true to stop retrying
             }
