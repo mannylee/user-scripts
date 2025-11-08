@@ -157,6 +157,16 @@ const MDACEnhancements = {
             el?.setAttribute('spellcheck', 'false');       // optional
         });
 
+        // Lazy email hack
+        document.getElementById("email").addEventListener('input', function() {
+            // Update confirm email with the value of email input
+            document.getElementById("confirmEmail").value = document.getElementById("email").value;
+        });
+        document.getElementById("confirmEmail").addEventListener('input', function() {
+            // Update confirm email with the value of email input
+            document.getElementById("email").value = document.getElementById("confirmEmail").value;
+        });
+        
         this.retryUntilSuccess(function() {
             // Check if jQuery is ready
             if ($('body')) {
