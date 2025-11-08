@@ -59,8 +59,8 @@ const MDACEnhancements = {
         this.log(`v${GM_info.script.version}`);
         this.fieldsEnhancements();
         this.initPeople();
-        this.promptForOptions();
-        this.autofill();
+        this.promptPerson();
+        this.promptAddress();
     },
 
     promptForChoice(promptMsg, keys) {
@@ -77,25 +77,23 @@ const MDACEnhancements = {
         return keys[choiceIndex];
     },
 
-    promptForOptions() {
-        const personKey = this.promptForChoice("Choose person", Object.keys(this.CONFIG.PEOPLE));
-        this.CONFIG.PERSON = personKey ? this.CONFIG.PEOPLE[personKey] : null;
+    promptPerson(){
+        const personKey = MDACEnhancements.promptForChoice("Choose person", Object.keys(MDACEnhancements.CONFIG.PEOPLE));
+        MDACEnhancements.CONFIG.PERSON = personKey ? MDACEnhancements.CONFIG.PEOPLE[personKey] : null;
 
-        const addressKey = this.promptForChoice("Choose address", Object.keys(this.CONFIG.ADDRESSES));
-        this.CONFIG.ADDRESS = addressKey
-            ? { ...this.CONFIG.TRAVELINFO, ...this.CONFIG.ADDRESSES[addressKey] }
-        : null;
-    },
-
-
-    autofill() {
         // Fill personal details
-        Object.entries(this.CONFIG.PERSON).forEach(([key, val]) => {
+        Object.entries(MDACEnhancements.CONFIG.PERSON).forEach(([key, val]) => {
             const elem = document.getElementById(key);
             if (elem && elem.value !== val) {
                 elem.value = val;
             }
         });
+    },
+    promptAddress(){
+        const addressKey = MDACEnhancements.promptForChoice("Choose address", Object.keys(MDACEnhancements.CONFIG.ADDRESSES));
+        MDACEnhancements.CONFIG.ADDRESS = addressKey
+            ? { ...MDACEnhancements.CONFIG.TRAVELINFO, ...MDACEnhancements.CONFIG.ADDRESSES[addressKey] }
+        : null;
 
         // Fill in travel details
         for (const key in MDACEnhancements.CONFIG.ADDRESS) {
@@ -118,7 +116,6 @@ const MDACEnhancements = {
                 }, 500); // initial delay
             }
         }
-
     },
 
     initPeople() {
@@ -160,17 +157,52 @@ const MDACEnhancements = {
             el?.setAttribute('spellcheck', 'false');       // optional
         });
 
-        // disable date picker for dob and passport expiry
-        $('#dob').off();
-        $('#passExpDte').off();
+        this.retryUntilSuccess(function() {
+            // Check if jQuery is ready
+            if ($('body')) {
+                // Your existing code to disable date picker and set default dates
+                $('#dob').off();
+                $('#passExpDte').off();
 
-        // Set default arrival and departure dates to tomorrow
-        var tomorrow = new Date();
-        tomorrow.setDate(tomorrow.getDate() + 1);
-        $('#arrDt').datepicker('setDate', tomorrow);
-        $('#depDt').datepicker('setDate', tomorrow);
+                // Set default arrival and departure dates to tomorrow
+                var tomorrow = new Date();
+                tomorrow.setDate(tomorrow.getDate() + 1);
+                $('#arrDt').datepicker('setDate', tomorrow);
+                $('#depDt').datepicker('setDate', tomorrow);
 
-        //
+
+                $('a:contains("Personal Information")')
+                    .removeAttr('data-parent')
+                    .removeAttr('href')
+                    .click(MDACEnhancements.promptPerson);
+
+                $('a:contains("Traveling Information")')
+                    .removeAttr('data-parent')
+                    .removeAttr('href')
+                    .click(MDACEnhancements.promptAddress);
+
+                return true; // Return true to stop retrying
+            }
+            return false; // Return false to keep retrying
+        }, 15, 200); // Retry up to 15 times, every 200ms
+    },
+
+    retryUntilSuccess(callback, maxAttempts = 10, interval = 100) {
+        let attempts = 0;
+
+        function tryExecute() {
+            if (callback()) {
+                // Condition met (callback returned true), execute the action
+            } else if (attempts < maxAttempts) {
+                // Condition not met, retry after interval
+                attempts++;
+                setTimeout(tryExecute, interval);
+            } else {
+                MDACEnhancements.log('Max attempts reached, condition not met.');
+            }
+        }
+
+        tryExecute();
     },
 
     log(value) { console.info(`${GM_info.script.name}: ${value}`); }
