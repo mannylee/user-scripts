@@ -9,6 +9,9 @@ Take back clipboard control for sites that try to disable it
 ### Amazon URL Cleanser ([Install](https://github.com/mannylee/user-scripts/raw/main/user-scripts/amazon-url-cleanser.user.js))
 Cleans Amazon marketplace URLs to remove tracking
 
+### Cathay Pacific Scroll Fixer ([Install](https://github.com/mannylee/user-scripts/raw/main/user-scripts/cathay-pacific-scroll-fixer.user.js))
+Fixes scroll issues on Cathay Pacific website forms
+
 ### Gmail Enhancements ([Install](https://github.com/mannylee/user-scripts/raw/refs/heads/main/user-scripts/gmail-enhancements.user.js))
 Removes Google tracking from URLs in emails
 
@@ -18,3 +21,6 @@ Note: To access the user script's `Storage` tab, go to Tampermonkey > Settings a
 
 ### TG Improvements ([Install](https://github.com/mannylee/user-scripts/raw/refs/heads/main/user-scripts/torrentgalaxy-improvements.user.js))
 Adds quality of life improvements to the TG site
+
+### YouTube Enhancements ([Install](https://github.com/mannylee/user-scripts/raw/main/user-scripts/youtube-enhancements.user.js))
+Automatically clicks "Yes" on the "Continue watching?" prompt when videos are paused
