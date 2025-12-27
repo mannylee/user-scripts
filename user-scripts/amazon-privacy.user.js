@@ -132,6 +132,7 @@ var AmazonPrivacy = {
                 AmazonPrivacy.cleanAllLinks();
                 AmazonPrivacy.removeCookieBanner();
                 AmazonPrivacy.removeSponsoredContent();
+                AmazonPrivacy.cleanUrl();
             } catch (e) {
                 console.error('AmazonPrivacy.observePageChanges callback error:', e);
             }
