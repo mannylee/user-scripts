@@ -6,8 +6,8 @@ Useful Tampermonkey user scripts
 Take back clipboard control for sites that try to disable it
 
 ## Site Specific
-### Amazon URL Cleanser ([Install](https://github.com/mannylee/user-scripts/raw/main/user-scripts/amazon-url-cleanser.user.js))
-Cleans Amazon marketplace URLs to remove tracking
+### Amazon Privacy ([Install](https://github.com/mannylee/user-scripts/raw/main/user-scripts/amazon-privacy.user.js))
+Cleans Amazon marketplace URLs to remove tracking, removes sponsored sections, removes cookie banners
 
 ### Cathay Pacific Scroll Fixer ([Install](https://github.com/mannylee/user-scripts/raw/main/user-scripts/cathay-pacific-scroll-fixer.user.js))
 Fixes scroll issues on Cathay Pacific website forms
