@@ -1,7 +1,7 @@
 // ==UserScript==
 // @name         Amazon Privacy
 // @namespace    https://gitlab.aws.dev/mannylee
-// @version      2025-12-27
+// @version      2025-12-28
 // @description  Clean and privacy‑enhance Amazon URLs and page content.
 // @author       mannylee
 // @match        https://www.amazon.ae/*
@@ -99,20 +99,32 @@ var AmazonPrivacy = {
     },
 
     cleanLinkElement: (a) => {
-        if (!(a instanceof HTMLAnchorElement)) return;
-        if (a.classList.contains("clean-url")) return;
-        if (!a.hasAttribute("href")) return;
+        if (!(a instanceof HTMLAnchorElement) || a.classList.contains("clean-url") || !a.hasAttribute("href")){
+            a.classList.add("clean-url");
+            return;
+        }
 
         const href = a.getAttribute("href");
-        const match = href.match(AmazonPrivacy.config.dpPattern);
-        if (!match) return;
+        let newHref = href;
 
-        const productIdPart = match[0].replace(/[/?]$/, '');
-        const startIndex = href.indexOf(match[0]);
-        const newHref = href.substring(0, startIndex) + productIdPart;
+        // 1. Handle /dp/ product links (your existing logic, fixed)
+        const dpMatch = href.match(/\/dp\/[A-Z0-9]+(?:[/?]|$)/i);
+        if (dpMatch) {
+            const productIdPart = dpMatch[0].replace(/[/?]$/, '');
+            const startIndex = href.indexOf(dpMatch[0]);
+            newHref = href.substring(0, startIndex) + productIdPart;
+        }
+        // 2. Handle query string tracking params (search/category/deals)
+        else if (href.includes('?')) {
+            newHref = AmazonPrivacy.common.cleanQueryString(href);
+        }
 
         if (newHref !== href) {
             a.setAttribute("href", newHref);
+            Object.defineProperty(a, 'href', {
+                writable: false
+            });
+
             AmazonPrivacy.common.incrementCounter('aLinksCleaned', 1);
         }
 
@@ -120,11 +132,19 @@ var AmazonPrivacy = {
     },
 
     cleanAllLinks: () => {
-        const links = document.querySelectorAll(
-            'a[href*="/dp/"]:not(.clean-url):not([href^="http"]):not([href^="#"])'
-        );
+        // Broader selector: ALL links with query strings OR /dp/
+        const links = document.querySelectorAll(`a[href*="/dp/"]:not(.clean-url),
+a[href*="?"]:not(.clean-url),
+a[href*="/s/"]:not(.clean-url),
+a[href*="/alm/"]:not(.clean-url),
+a[href*="/b/"]:not(.clean-url),
+a[href*="/gp/goldbox"]:not(.clean-url)
+`);
+
+
         links.forEach(AmazonPrivacy.cleanLinkElement);
     },
+
 
     observePageChanges: () => {
         const observer = new MutationObserver(() => {
@@ -147,6 +167,43 @@ var AmazonPrivacy = {
     },
 
     common: {
+        cleanQueryString: (url) => {
+            let urlObj;
+            try {
+                urlObj = new URL(url);
+            } catch (e) {
+                const baseDomain = window.location.href;
+                urlObj = new URL(url, baseDomain);
+            }
+
+            const trackingParams = [
+                '_encoding', 'bbn', 'content-id', 'crid', 'dc', 'pd_rd_r',
+                'pd_rd_w', 'pd_rd_wg', 'pf_rd_i', 'pf_rd_m', 'pf_rd_p',
+                'pf_rd_r', 'pf_rd_s', 'pf_rd_t', 'qid', 'ref', 'ref_',
+                'rnid', 'sprefix', 'utm_medium', 'utm_source'
+            ];
+
+            // Clean query params
+            const params = new URLSearchParams(urlObj.search);
+            for (const param of trackingParams) {
+                if (param !== 'bubble-id') {
+                    params.delete(param);
+                }
+            }
+            urlObj.search = params.toString();
+
+            // Clean path tracking (remove /ref=... segments)
+            let pathname = urlObj.pathname;
+            const refIndex = pathname.indexOf('/ref=');
+            if (refIndex !== -1) {
+                pathname = pathname.slice(0, refIndex);
+            }
+            urlObj.pathname = pathname;
+
+            // FIXED: Return full URL - urlObj.search already has ? if needed
+            return urlObj.origin + urlObj.pathname + urlObj.search;
+        },
+
         defaultCounters: {
             sponsoredProductsRemoved: 0,
             aLinksCleaned: 0,
@@ -177,7 +234,6 @@ var AmazonPrivacy = {
                 const current = GM_getValue(key, 0);
                 const updated = current + Number(amount);
                 GM_setValue(key, updated);
-                // console.info(`Counter updated: ${key} +${amount} → ${updated}`);
             } catch (e) {
                 console.error('incrementCounter error for key', key, e);
             }
