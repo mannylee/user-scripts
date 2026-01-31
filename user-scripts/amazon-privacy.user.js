@@ -1,7 +1,7 @@
 // ==UserScript==
 // @name         Amazon Privacy
 // @namespace    https://gitlab.aws.dev/mannylee
-// @version      2025-12-28
+// @version      2026-01-31
 // @description  Clean and privacy‑enhance Amazon URLs and page content.
 // @author       mannylee
 // @match        https://www.amazon.ae/*
@@ -84,6 +84,20 @@ var AmazonPrivacy = {
     },
 
     cleanUrl: () => {
+        // URL is a "Send to Kindle email" page
+        const kindleUrl = AmazonPrivacy.common.extractSendToKindleFromLocation();
+        if (kindleUrl && kindleUrl !== window.location.href) {
+            AmazonPrivacy.consoleInfo(
+                "Redirecting Send-to-Kindle email URL:\n" +
+                window.location.href + "\n→ " + kindleUrl
+            );
+
+            window.location.replace(kindleUrl);
+            AmazonPrivacy.common.incrementCounter('urlsCleaned', 1);
+            return;
+        }
+
+        // URL location is a product dp page
         const match = window.location.href.match(AmazonPrivacy.config.dpPattern);
         if (match) {
             const startIndex = window.location.href.indexOf(match[0]);
@@ -167,6 +181,28 @@ a[href*="/gp/goldbox"]:not(.clean-url)
     },
 
     common: {
+        extractSendToKindleFromLocation: () => {
+            try {
+                const url = new URL(window.location.href);
+
+                if (url.pathname !== '/gp/f.html') return null;
+
+                const encodedU = url.searchParams.get('U');
+                if (!encodedU) return null;
+
+                const decodedU = decodeURIComponent(encodedU);
+
+                if (!decodedU.includes('/sendtokindle/verification/confirm/')) {
+                    return null;
+                }
+
+                const cleanUrl = new URL(decodedU);
+                return cleanUrl.origin + cleanUrl.pathname;
+            } catch (e) {
+                return null;
+            }
+        },
+
         cleanQueryString: (url) => {
             let urlObj;
             try {
