@@ -19,6 +19,9 @@ Removes Google tracking from URLs in emails
 Helps autofill the MDAC
 Note: To access the user script's `Storage` tab, go to Tampermonkey > Settings and set Config mode to Advanced.
 
+### Splitwise Enhancements ([Install](https://github.com/mannylee/user-scripts/raw/refs/heads/main/user-scripts/splitwise-enhancements.user.js))
+Fixes nags on site
+
 ### TG Improvements ([Install](https://github.com/mannylee/user-scripts/raw/refs/heads/main/user-scripts/torrentgalaxy-improvements.user.js))
 Adds quality of life improvements to the TG site
 
