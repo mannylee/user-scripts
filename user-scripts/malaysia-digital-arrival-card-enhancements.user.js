@@ -5,6 +5,7 @@
 // @description  Autopopulate fields in the MDAC & fix field manipulation
 // @author       mannylee
 // @match        https://imigresen-online.imi.gov.my/mdac/main?registerMain
+// @match        https://imigresen-online.imi.gov.my/mdac/egate
 // @icon         https://imigresen-online.imi.gov.my/mdac/images/favicon.ico
 // @grant        GM_setValue
 // @grant        GM_getValue
@@ -57,10 +58,21 @@ const MDACEnhancements = {
 
     load() {
         this.log(`v${GM_info.script.version}`);
-        this.fieldsEnhancements();
-        this.initPeople();
-        this.promptPerson();
-        this.promptAddress();
+
+        // MDAC submission
+        if(/mdac\/main\?registerMain/.test(window.location.href)){
+            this.fieldsEnhancements();
+            this.initPeople();
+            this.removeCaptchaRequirement();
+
+            // These steps must be at the end of this block
+            this.promptPerson();
+            this.promptAddress();
+        }
+        // MDAC egate check
+        else if (/mdac\/egate/.test(window.location.href)){
+            this.removeCaptchaRequirement();
+        }
     },
 
     promptForChoice(promptMsg, keys) {
@@ -206,6 +218,28 @@ const MDACEnhancements = {
         }, 15, 200); // Retry up to 15 times, every 200ms
     },
 
+    removeCaptchaRequirement: ()=>{
+        MDACEnhancements.retryUntilSuccess(function() {
+
+            MDACEnhancements.log("Checking button");
+            let button = document.querySelector("#submit");
+            if(button){
+                if(button.getAttribute("onclick") === "return validateSubmit();"){
+                    MDACEnhancements.log("Updated submit button to always true");
+                    button.setAttribute("onclick", "return true;");
+                    return true;
+                }
+                if(button.name === "submitRegistration"){
+                    MDACEnhancements.log("Updated verifyResult to true");
+                    /* global verifyResult:writable */
+                    verifyResult = true;
+                    return true;
+                }
+            }
+            return false;
+        }, 15, 200);
+    },
+
     retryUntilSuccess(callback, maxAttempts = 10, interval = 100) {
         let attempts = 0;
 
@@ -224,7 +258,7 @@ const MDACEnhancements = {
         tryExecute();
     },
 
-    log(value) { console.info(`${GM_info.script.name}: ${value}`); }
+    log(value) { console.info(`${GM_info.script.name}\n${value}`); }
 };
 
 MDACEnhancements.load();
