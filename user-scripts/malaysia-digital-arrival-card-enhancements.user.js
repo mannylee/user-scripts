@@ -1,7 +1,7 @@
 // ==UserScript==
 // @name         Malaysia Digital Arrival Card (MDAC) Enhancements
 // @namespace    https://github.com/mannylee
-// @version      2025-11-08
+// @version      2026-03-07
 // @description  Autopopulate fields in the MDAC & fix field manipulation
 // @author       mannylee
 // @match        https://imigresen-online.imi.gov.my/mdac/main?registerMain
@@ -86,6 +86,11 @@ const MDACEnhancements = {
             const elem = document.getElementById(key);
             if (elem && elem.value !== val) {
                 elem.value = val;
+
+                // special case for email
+                if(key === "email"){
+                    document.getElementById("confirmEmail").value = val;
+                }
             }
         });
     },
@@ -125,10 +130,10 @@ const MDACEnhancements = {
                 passNo: "",
                 dob: "",
                 nationality: "CAN",
+                pob: "CAN",
                 sex: "1",
                 passExpDte: "",
                 email: "@gmail.com",
-                confirmEmail: "@gmail.com",
                 region: "65",
                 mobile: ""
             }
